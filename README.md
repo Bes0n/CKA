@@ -12,6 +12,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - You can have one or many **master** nodes
     - You can have zero or mane **worker** nodes
 
+![img](https://github.com/Bes0n/CKA/blob/master/images/img1.png)
 
 ### Kubernetes API Primitives
 ### Kubernetes Services and Network Primitives
