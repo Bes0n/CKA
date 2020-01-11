@@ -129,5 +129,87 @@ Events:
   Normal  Started    7m     kubelet, minikube  Started container nginx
 ```
 
+- ``` kubectl delete pod nginx ``` - delete your **nginx** pod
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img4.png)
+
 ### Kubernetes API Primitives
+Every component in the Kubernetes system makes a request to the API server. The kubectl command line utility processes those API calls for us and allows us to format our request in a certain way. In this lesson, we will learn how Kubernetes accepts the instructions to run deployments and go through the YAML script that is used to tell the control plane what our environment should look like.
+  
+- ```kubectl get componentstatus``` - get your components status 
+```
+NAME                 STATUS    MESSAGE             ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-0               Healthy   {"health":"true"}
+```
+
+YAML file with configuration of nginx-deployment:
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+```
+
+- ``` kubectl create -f nginx-deployment.yml ``` - create POD with configuration stored in **nginx-deployment.yml**
+
+- ``` kubectl get deployment nginx-deployment -o yaml ``` - get information about your deployment in YAML format
+
+- Definitions from YAML file:
+    - **apiVersion** - Kubernetes API version, which indicates the path to ensure the API presents a clear, consistent view of system resources and behavior.
+    - **kind** - Represents the kind of object you want to create. This is a required field. Examples of kinds of objects include pod, deployment, job, DaemonSet, ReplicaSet, ReplicationController, and more. 
+    - **metadata** - Data that helpds uniquely identify the object, including a name string, UID, and optional namespace. 
+    - **spec** - Describes your desired state for the object and the characteristics you want the object to have. The format of the object spec is different for every object and contains nested fields specific to that object. 
+    - **spec (container)** - Specifies the pod's container image, volumes, and exposed ports for the container
+    - **status** - Describes the actual state of the object and is supplied and updated by the Kubernetes system. At any given time, the Kubernetes Control Plane actively manages an object's actual state to match the desired state you supplied.
+
+- ``` kubectl get pods --show-labels ``` - get your pod's labels
+```
+NAME                                READY   STATUS    RESTARTS   AGE    LABELS
+nginx-deployment-54f57cf6bf-hddbx   1/1     Running   0          127m   app=nginx,pod-template-hash=54f57cf6bf
+nginx-deployment-54f57cf6bf-wbw22   1/1     Running   0          127m   app=nginx,pod-template-hash=54f57cf6bf
+```
+
+- ```kubectl label pods nginx-deployment-54f57cf6bf-hddbx env=prod``` - add **prod** label to your pod
+  
+```
+pod/nginx-deployment-54f57cf6bf-hddbx labeled
+```
+  
+- ``` kubectl get pods -L env ``` - get pods with env label key
+```
+NAME                                READY   STATUS    RESTARTS   AGE    ENV
+nginx-deployment-54f57cf6bf-hddbx   1/1     Running   0          135m   prod
+nginx-deployment-54f57cf6bf-wbw22   1/1     Running   0          135m
+```
+
+- ``` kubectl annotate deployment nginx-deployment mysite.com/someannotation="isituseful" ``` - add additional annotation after deployment creation. 
+
+- ``` kubectl get pods --field-selector status.phase=Running``` - filter objects based on some fields. In our case filter **pods** with phase status **running**
+
+- ``` kubectl get services --field-selector metadata.namespace=default ``` - select services with default namespace
+
+- ``` kubectl get pods --field-selector=status.phase=Running,metadata.namespace=default ``` - combination of two previous commands. 
+
+- ``` kubectl get pods --field-selector=status.phase!=Running,metadata.namespace!=default ``` - reverve command, where status **is not** running and **not equal** to default namespace
+
+By **label selectors** you can perform several actions on PODs which have these labels. You can edit, remove that labeled objects. 
+
 ### Kubernetes Services and Network Primitives
