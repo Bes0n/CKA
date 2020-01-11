@@ -212,4 +212,80 @@ nginx-deployment-54f57cf6bf-wbw22   1/1     Running   0          135m
 
 By **label selectors** you can perform several actions on PODs which have these labels. You can edit, remove that labeled objects. 
 
+![img](https://github.com/Bes0n/CKA/blob/master/images/img5.png)
+
+
 ### Kubernetes Services and Network Primitives
+Kubernetes services allow you to dynamically access a group of replica pods without having to keep track of which pods are moved, changed, or deleted. In this lesson, we will go through how to create a service and communicate from one pod to another.
+
+- ``` kubectl get pods -o wide``` - get wide information about pods.
+```
+NAME                                READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+nginx-deployment-54f57cf6bf-hddbx   1/1     Running   0          3h33m   172.17.0.5   minikube   <none>           <none>
+nginx-deployment-54f57cf6bf-wbw22   1/1     Running   0          3h33m   172.17.0.4   minikube   <none>           <none>
+```
+
+- ``` kubectl delete pods nginx-deployment-54f57cf6bf-hddbx ``` - let's delete pod and see what will happen. 
+```
+NAME                                READY   STATUS    RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+nginx-deployment-54f57cf6bf-wbw22   1/1     Running   0          3h34m   172.17.0.4   minikube   <none>           <none>
+nginx-deployment-54f57cf6bf-xlcdh   1/1     Running   0          18s     172.17.0.5   minikube   <none>           <none>
+```
+
+As a result we will have new pod running with new IP assigned on it. Here **service** takes place - dynamically access a group of replica pods without having to keep track of which pods are moved, changed, or deleted.
+  
+- Yaml file for creating **service** object looks like this:
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+spec:
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30080
+  selector:
+    app: nginx
+```
+
+- Where:
+    - **kind** - type of deployment
+    - **NodePort** - reservation of port for all nodes
+    - **selector** - assign service to pod by selector, in our case by labels
+
+- ``` kubectl create -f .\nginx-nodeport.yml``` - create service
+- ``` kubectl get services ``` - get list of services 
+- ``` kubectl get services nginx-nodeport ``` - get selected service - **nginx-nodeport**
+```
+NAME             TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+kubernetes       ClusterIP   10.96.0.1      <none>        443/TCP        4h23m
+nginx-nodeport   NodePort    10.96.241.16   <none>        80:30080/TCP   73s
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img6.png)
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img7.png)
+
+- ``` kubectl create -f .\busybox.yml ``` Let's create **busybox** pod
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+spec:
+  containers:
+  - name: busybox
+    image: radial/busyboxplus:curl
+    args:
+    - sleep
+    - "1000"
+```
+
+- ``` kubectl exec busybox -- curl 10.96.241.16:80 ``` - execute command from **busybox POD** to **NodePort service**. Here one POD reached another POD by using **kube-proxy**
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img8.png)
