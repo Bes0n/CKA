@@ -18,6 +18,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img2.png)
 
+Working with **kubectl**:
 
 - ``` kubectl get nodes ``` - see your nodes
 ```
