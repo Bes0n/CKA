@@ -71,5 +71,63 @@ spec:
 EOF
 ```
 
+- ``` kubectl get pods ``` - get information about pods
+```
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          6m1s
+```
+
+- ``` kubectl describe pod nginx ``` - get detailed information about **nginx** pod
+```
+Name:         nginx
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.99.100
+Start Time:   Sat, 11 Jan 2020 13:18:18 +0100
+Labels:       <none>
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.4
+IPs:
+  IP:  172.17.0.4
+Containers:
+  nginx:
+    Container ID:   docker://c072f93d7911a772f7fc09f35d6142abc0e730aa5f273b0f3e9d0615a16f282f
+    Image:          nginx
+    Image ID:       docker-pullable://nginx@sha256:8aa7f6a9585d908a63e5e418dc5d14ae7467d2e36e1ab4f0d8f9d059a3d071ce
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Sat, 11 Jan 2020 13:18:28 +0100
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-b4lz9 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-b4lz9:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-b4lz9
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  7m10s  default-scheduler  Successfully assigned default/nginx to minikube
+  Normal  Pulling    7m8s   kubelet, minikube  Pulling image "nginx"
+  Normal  Pulled     7m     kubelet, minikube  Successfully pulled image "nginx"
+  Normal  Created    7m     kubelet, minikube  Created container nginx
+  Normal  Started    7m     kubelet, minikube  Started container nginx
+```
+
 ### Kubernetes API Primitives
 ### Kubernetes Services and Network Primitives
