@@ -41,6 +41,35 @@ kube-system   kube-scheduler-minikube            1/1     Running   0          4m
 kube-system   storage-provisioner                1/1     Running   0          4m50s
 ```
 
+- ``` kubectl get pods --all-namespaces -o wide ``` - get detailed information about pods
+
+- ```kubectl get namespaces``` - get your kubernetes **namespaces**
+```
+NAME              STATUS   AGE
+default           Active   9m41s
+kube-node-lease   Active   9m42s
+kube-public       Active   9m42s
+kube-system       Active   9m42s
+```
+
+This is how Application Running on Kubernetes looks like:
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img3.png)
+
+- Let's deploy simple POD with nginx image. JSON and YAML syntax accepted
+
+```
+cat << EOF | kubectl create -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+EOF
+```
 
 ### Kubernetes API Primitives
 ### Kubernetes Services and Network Primitives
