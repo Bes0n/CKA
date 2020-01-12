@@ -5,6 +5,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Kubernetes Cluster Architecture](#kubernetes-cluster-architecture)
     - [Kubernetes API Primitives](#kubernetes-api-primitives)
     - [Kubernetes Services and Network Primitives](#kubernetes-services-and-network-primitives)
+    - [Exploring the Kubernetes Cluster via the Command Line](#exploring-the-kubernetes-cluster-via-the-command-line)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -289,3 +290,14 @@ spec:
 - ``` kubectl exec busybox -- curl 10.96.241.16:80 ``` - execute command from **busybox POD** to **NodePort service**. Here one POD reached another POD by using **kube-proxy**
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img8.png)
+
+
+### Exploring the Kubernetes Cluster via the Command Line
+- LAB answers:
+  - ``` kubectl get nodes ``` - List all the nodes in the cluster.
+  - ``` kubectl get pods --all-namespaces ``` - List all the pods in all namespaces.
+  - ``` kubectl get namespaces ``` - List all the namespaces in the cluster.
+  - ``` kubectl get pods ``` - Check to see if there are any pods running in the default namespace.
+  - ``` kubectl get pods --all-namespaces -o wide ``` - Find the IP address of the API server running on the master node.
+  - ``` kubectl get deployments ``` - See if there are any deployments in this cluster.
+  - ``` kubectl get pods --all-namespaces --show-labels -o wide ``` - Find the label applied to the etcd pod on the master node.
