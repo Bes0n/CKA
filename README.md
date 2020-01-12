@@ -6,6 +6,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Kubernetes API Primitives](#kubernetes-api-primitives)
     - [Kubernetes Services and Network Primitives](#kubernetes-services-and-network-primitives)
     - [Exploring the Kubernetes Cluster via the Command Line](#exploring-the-kubernetes-cluster-via-the-command-line)
+- [Building the Kubernetes Cluster](#building-the-kubernetes-cluster)
+    - [Release Binaries, Provisioning, and Types of Clusters](#release-binaries-provisioning-and-types-of-clusters)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -301,3 +303,7 @@ spec:
   - ``` kubectl get pods --all-namespaces -o wide ``` - Find the IP address of the API server running on the master node.
   - ``` kubectl get deployments ``` - See if there are any deployments in this cluster.
   - ``` kubectl get pods --all-namespaces --show-labels -o wide ``` - Find the label applied to the etcd pod on the master node.
+
+
+## Building the Kubernetes Cluster
+### Release Binaries, Provisioning, and Types of Clusters
