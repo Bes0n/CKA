@@ -307,3 +307,8 @@ spec:
 
 ## Building the Kubernetes Cluster
 ### Release Binaries, Provisioning, and Types of Clusters
+There are many choices when it comes to choosing where to create your Kubernetes cluster. In this lesson, we will focus on what you need to know for the CKA exam — specifically, how the cluster build relates to the types of clusters you will face in the exam.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img9.png)
+  
+![img](https://github.com/Bes0n/CKA/blob/master/images/img10.png)
