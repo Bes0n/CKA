@@ -314,7 +314,7 @@ There are many choices when it comes to choosing where to create your Kubernetes
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img10.png)
 
 ### Installing Kubernetes Master and Nodes
-Now that we’ve considered all the different types of clusters and where to locate the tools we need to install a cluster, let’s get to it! In this lesson, we will go through the all steps to install a three-node cluster using your Linux Academy cloud servers.
+Now that we’ve considered all the different types of clusters and where to locate the tools we need to install a cluster, let’s get to it! In this lesson, we will go through the all steps to install a three-node cluster.
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img11.png)
 
