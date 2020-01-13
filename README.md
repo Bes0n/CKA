@@ -11,6 +11,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Installing Kubernetes Master and Nodes](#installing-kubernetes-master-and-nodes)
     - [Building a Highly Available Kubernetes Cluster](#building-a-highly-available-kubernetes-cluster)
     - [Configuring Secure Cluster Communications](#configuring-secure-cluster-communications)
+    - [Running End-to-End Tests on Your Cluster](#running-end-to-end-tests-on-your-cluster)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -488,3 +490,76 @@ kubectl get serviceaccounts
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img15.png)
 
+### Running End-to-End Tests on Your Cluster
+Running end-to-end tests ensures your application will run efficiently without having to worry about cluster health problems. Kubetest is a useful tool for providing end-to-end tests — however, it is beyond the scope of this exam. In this lesson, we will go through the practice of testing our ability to run deployments, run pods, expose a container, execute a command from a container, run a service, and check the overall health of our nodes and pods for conditions.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img16.png)
+
+Run a simple nginx deployment:
+```
+kubectl run nginx --image=nginx
+```
+
+View the deployments in your cluster:
+```
+kubectl get deployments
+```
+
+View the pods in the cluster:
+```
+kubectl get pods
+```
+
+Use port forwarding to access a pod directly:
+```
+kubectl port-forward $pod_name 8081:80
+```
+
+Get a response from the nginx pod directly:
+```
+curl --head http://127.0.0.1:8081
+```
+
+View the logs from a pod:
+```
+kubectl logs $pod_name
+```
+
+Run a command directly from the container:
+```
+kubectl exec -it nginx -- nginx -v
+```
+
+Create a service by exposing port 80 of the nginx deployment:
+```
+kubectl expose deployment nginx --port 80 --type NodePort
+```
+
+List the services in your cluster:
+```
+kubectl get services
+```
+
+Get a response from the service (run from worker node):
+```
+curl -I localhost:$node_port
+```
+
+List the nodes' status:
+```
+kubectl get nodes
+```
+
+View detailed information about the nodes:
+```
+kubectl describe nodes
+```
+
+View detailed information about the pods:
+```
+kubectl describe pods
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img17.png)
+
+mman 
