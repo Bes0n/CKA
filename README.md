@@ -561,5 +561,3 @@ kubectl describe pods
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img17.png)
-
-mman 
