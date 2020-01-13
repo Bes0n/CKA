@@ -10,7 +10,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Release Binaries, Provisioning, and Types of Clusters](#release-binaries-provisioning-and-types-of-clusters)
     - [Installing Kubernetes Master and Nodes](#installing-kubernetes-master-and-nodes)
     - [Building a Highly Available Kubernetes Cluster](#building-a-highly-available-kubernetes-cluster)
-
+    - [Configuring Secure Cluster Communications](#configuring-secure-cluster-communications)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -434,3 +434,57 @@ kubectl get pods -n kube-system -w
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img13.png)
+
+
+### Configuring Secure Cluster Communications
+To prevent unauthorized users from modifying the cluster state, RBAC is used, defining roles and role bindings for a user. A service account resource is created for a pod to determine how it has control over the cluster state. For example, the default service account will not allow you to list the services in a namespace.
+
+View the kube-config:
+```
+cat .kube/config | more
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img14.png)
+
+View the service account token:
+```
+kubectl get secrets
+```
+
+Create a new namespace named **my-ns**:
+```
+kubectl create ns my-ns
+```
+
+Run the kube-proxy pod in the **my-ns** namespace:
+```
+kubectl run test --image=chadmcrowell/kubectl-proxy -n my-ns
+```
+
+List the pods in the **my-ns** namespace:
+```
+kubectl get pods -n my-ns
+```
+
+Run a shell in the newly created pod:
+```
+kubectl exec -it <name-of-pod> -n my-ns sh
+```
+
+List the services in the namespace via API call:
+```
+curl localhost:8001/api/v1/namespaces/my-ns/services
+```
+
+View the token file from within a pod:
+```
+cat /var/run/secrets/kubernetes.io/serviceaccount/token
+```
+
+List the service account resources in your cluster:
+```
+kubectl get serviceaccounts
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img15.png)
+
