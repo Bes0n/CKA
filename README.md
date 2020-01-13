@@ -8,6 +8,9 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Exploring the Kubernetes Cluster via the Command Line](#exploring-the-kubernetes-cluster-via-the-command-line)
 - [Building the Kubernetes Cluster](#building-the-kubernetes-cluster)
     - [Release Binaries, Provisioning, and Types of Clusters](#release-binaries-provisioning-and-types-of-clusters)
+    - [Installing Kubernetes Master and Nodes](#installing-kubernetes-master-and-nodes)
+    - [Building a Highly Available Kubernetes Cluster](#building-a-highly-available-kubernetes-cluster)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -403,3 +406,31 @@ chadcrowell1c.mylabserver.com   Ready    master   4m18s v1.13.5
 chadcrowell2c.mylabserver.com   Ready    none     82s   v1.13.5
 chadcrowell3c.mylabserver.com   Ready    none     69s   v1.13.5
 ```
+
+### Building a Highly Available Kubernetes Cluster
+You can provide high availability for cluster components by running multiple instances — however, some replicated components must remain in standby mode. The scheduler and the controller manager are actively watching the cluster state and take action when it changes. If multiples are running, it creates the possibility of unwarranted duplicates of pods.
+
+View the pods in the default namespace with a custom view:
+```
+kubectl get pods -o custom-columns=POD:metadata.name,NODE:spec.nodeName --sort-by spec.nodeName -n kube-system
+```
+
+View the kube-scheduler YAML (from that output you can see who is the current leader):
+```
+kubectl get endpoints kube-scheduler -n kube-system -o yaml
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img12.png)
+
+
+Create a stacked etcd topology using kubeadm:
+```
+kubeadm init --config=kubeadm-config.yaml
+```
+
+Watch as pods are created in the default namespace:
+```
+kubectl get pods -n kube-system -w
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img13.png)
