@@ -681,6 +681,8 @@ curl -I localhost:$node_port
 ### Upgrading the Kubernetes Cluster
 kubeadm allows us to upgrade our cluster components in the proper order, making sure to include important feature upgrades we might want to take advantage of in the latest stable version of Kubernertes. In this lesson, we will go through upgrading our cluster from version 1.13.5 to 1.14.1.
 
+![img](https://github.com/Bes0n/CKA/blob/master/images/img18.png)
+
 Get the version of the API server:
 ```
 kubectl version --short
@@ -728,18 +730,76 @@ sudo kubeadm upgrade apply v1.14.1
 
 Release the hold on the version of kubectl:
 
-```sudo apt-mark unhold kubectl```
+```
+sudo apt-mark unhold kubectl
+```
 
 Upgrade kubectl:
-```sudo apt install -y kubectl=1.14.1-00```
+```
+sudo apt install -y kubectl=1.14.1-00
+```
 
 Hold the version of kubectl at 1.14.1:
-```sudo apt-mark hold kubectl```
+```
+sudo apt-mark hold kubectl
+```
 
 Upgrade the version of kubelet:
-```sudo apt install -y kubelet=1.14.1-00```
+```
+sudo apt install -y kubelet=1.14.1-00
+```
 
 Hold the version of kubelet at 1.14.1:
-```sudo apt-mark hold kubelet```
+```
+sudo apt-mark hold kubelet
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img19.png)
 
 ### Operating System Upgrades within a Kubernetes Cluster
+When we need to take a node down for maintenance, Kubernetes makes it easy to evict the pods on that node, take it down, and then continue scheduling pods after the maintenance is complete. Furthermore, if the node needs to be decommissioned, you can just as easily remove the node and replace it with a new one, joining it to the cluster.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img20.png)
+
+See which pods are running on which nodes:
+```
+kubectl get pods -o wide
+```
+
+Evict the pods on a node:
+```
+kubectl drain [node_name] --ignore-daemonsets
+```
+
+Watch as the node changes status:
+```
+kubectl get nodes -w
+```
+
+Schedule pods to the node after maintenance is complete:
+```
+kubectl uncordon [node_name]
+```
+
+Remove a node from the cluster:
+```
+kubectl delete node [node_name]
+```
+
+Generate a new token:
+```
+sudo kubeadm token generate
+```
+
+List the tokens:
+```
+sudo kubeadm token list
+```
+
+
+Print the kubeadm join command to join a node to the cluster:
+```
+sudo kubeadm token create [token_name] --ttl 2h --print-join-command
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img21.png)
