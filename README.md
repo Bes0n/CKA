@@ -12,7 +12,10 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Building a Highly Available Kubernetes Cluster](#building-a-highly-available-kubernetes-cluster)
     - [Configuring Secure Cluster Communications](#configuring-secure-cluster-communications)
     - [Running End-to-End Tests on Your Cluster](#running-end-to-end-tests-on-your-cluster)
-
+    - [Installing and Testing the Components of a Kubernetes Cluster](#installing-and-testing-the-components-of-a-kubernetes-cluster)
+- [Managing the Kubernetes Cluster](#managing-the-kubernetes-cluster)
+    - [Upgrading the Kubernetes Cluster](#upgrading-the-kubernetes-cluster)
+    - [Operating System Upgrades within a Kubernetes Cluster](operating-system-upgrades-within-a-kubernetes-cluster)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -561,3 +564,123 @@ kubectl describe pods
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img17.png)
+
+### Installing and Testing the Components of a Kubernetes Cluster
+
+**Get the Docker gpg, and add it to your repository.**
+
+Run the following commands on all three nodes to get the Docker gpg key and add it to your repository:
+
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+```
+
+**Get the Kubernetes gpg key, and add it to your repository.**
+Run the following commands on all three nodes to get the Kubernetes gpg key and add it to your repository:
+```
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
+cat << EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
+deb https://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+sudo apt-get update
+```
+
+**Install Docker, kubelet, kubeadm, and kubectl.**
+Run the following command on all three nodes to install docker, kubelet, kubeadm, and kubectl:
+
+```
+sudo apt-get install -y docker-ce=18.06.1~ce~3-0~ubuntu kubelet=1.13.5-00 kubeadm=1.13.5-00 kubectl=1.13.5-00
+
+sudo apt-mark hold kubelet kubeadm kubectl docker-ce #mark installed applications to hold versions
+
+```
+
+**Initialize the Kubernetes cluster.**
+In the master node, run the following command to initialize the cluster using kubeadm:
+```
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+```
+
+**Set up local kubeconfig.**
+In the master node, run the following commands to set up local kubeconfig:
+```
+mkdir -p $HOME/.kube
+
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+**Apply the flannel CNI plugin as a network overlay.**
+In the master node, run the following command to apply flannel:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
+**Join the worker nodes to the cluster, and verify they have joined successfully.**
+In both of the worker nodes, run the output of the kubeadm init command to join the worker nodes to the cluster. Should look similar to:
+
+```
+sudo kubeadm join 'KUBERNETES_MASTER_IP':6443 --token 'UNIQUE_TOKEN' --discovery-token-ca-cert-hash sha256:'UNIQUE_HASH'
+```
+
+**Run a deployment that includes at least one pod, and verify it was successful.**
+In the master node, run the following commands to run a deployment of ngnix and verify:
+```
+kubectl create deployment nginx --image=nginx
+
+kubectl get deployments
+```
+
+**Verify the pod is running and available.**
+```
+kubectl get pods
+
+kubectl describe pods nginx-5c7588df-wgrg6
+```
+
+**Use port forwarding to extend port 80 to 8081, and verify access to the pod directly.**
+In the master node, run the following command to forward the container port 80 to 8081:
+```
+kubectl port-forward [pod_name] 8081:80
+```
+
+Open a new shell to the Kubernetes master and run the following command:
+```
+curl --head http://127.0.0.1:8081
+```
+
+*NOTE: You must leave the previous session open in order to properly port forward. As soon as you close that session, the port will NO LONGER be open.*
+
+**Execute a command directly on a pod.**
+In the original master node terminal, run this command to execute the **nginx version** command from a pod:
+```
+kubectl exec -it <pod_name> -- nginx -v
+```
+
+**Create a service, and verify connectivity on the node port.**
+In the original master node terminal, run the following commands to create a NodePort service and view the service:
+```
+kubectl expose deployment nginx --port 80 --type NodePort
+
+kubectl get services
+```
+
+In one of the worker node terminals, run the following command to verify its connectivity (get the **$node_port** number from the **PORT(S)** column of the above service output):
+
+```
+curl -I localhost:$node_port
+```
+
+## Managing the Kubernetes Cluster
+### Upgrading the Kubernetes Cluster
+kubeadm allows us to upgrade our cluster components in the proper order, making sure to include important feature upgrades we might want to take advantage of in the latest stable version of Kubernertes. In this lesson, we will go through upgrading our cluster from version 1.13.5 to 1.14.1.
+
+
+
+### Operating System Upgrades within a Kubernetes Cluster
