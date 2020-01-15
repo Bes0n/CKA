@@ -15,7 +15,10 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Installing and Testing the Components of a Kubernetes Cluster](#installing-and-testing-the-components-of-a-kubernetes-cluster)
 - [Managing the Kubernetes Cluster](#managing-the-kubernetes-cluster)
     - [Upgrading the Kubernetes Cluster](#upgrading-the-kubernetes-cluster)
-    - [Operating System Upgrades within a Kubernetes Cluster](operating-system-upgrades-within-a-kubernetes-cluster)
+    - [Operating System Upgrades within a Kubernetes Cluster](#operating-system-upgrades-within-a-kubernetes-cluster)
+    - [Backing Up and Restoring a Kubernetes Cluster](#backing-up-and-restoring-a-kubernetes-cluster)
+    - [Upgrading the Kubernetes Cluster Using kubeadm](#upgrading-the-Kubernetes-cluster-using-kubeadm)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -803,3 +806,55 @@ sudo kubeadm token create [token_name] --ttl 2h --print-join-command
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img21.png)
+
+### Backing Up and Restoring a Kubernetes Cluster
+Backing up your cluster can be a useful exercise, especially if you have a single etcd cluster, as all the cluster state is stored there. The etcdctl utility allows us to easily create a snapshot of our cluster state (etcd) and save this to an external location. In this lesson, we’ll go through creating the snapshot and talk about restoring in the event of failure.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img22.png)
+
+Get the etcd binaries:
+```
+wget https://github.com/etcd-io/etcd/releases/download/v3.3.12/etcd-v3.3.12-linux-amd64.tar.gz
+```
+
+Unzip the compressed binaries:
+````
+tar xvf etcd-v3.3.12-linux-amd64.tar.gz
+```
+
+Move the files into /usr/local/bin:
+```
+sudo mv etcd-v3.3.12-linux-amd64/etcd* /usr/local/bin
+```
+
+Take a snapshot of the etcd datastore using etcdctl:
+```
+sudo ETCDCTL_API=3 etcdctl snapshot save snapshot.db --cacert /etc/kubernetes/pki/etcd/server.crt --cert /etc/kubernetes/pki/etcd/ca.crt --key /etc/kubernetes/pki/etcd/ca.key
+```
+
+View the help page for etcdctl:
+```
+ETCDCTL_API=3 etcdctl --help
+```
+
+Browse to the folder that contains the certificate files:
+```
+cd /etc/kubernetes/pki/etcd/
+```
+
+View that the snapshot was successful:
+```
+ETCDCTL_API=3 etcdctl --write-out=table snapshot status snapshot.db
+```
+
+Zip up the contents of the etcd directory:
+```
+sudo tar -zcvf etcd.tar.gz /etc/kubernetes/pki/etcd
+```
+
+Copy the etcd directory to another server:
+```
+scp etcd.tar.gz cloud_user@18.219.235.42:~/
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img23.png)
