@@ -948,3 +948,44 @@ Verify that the installation was successful.
 ```
 kubectl version
 ```
+
+### Pod and Node Networking
+
+Kubernetes keeps networking simple for effective communication between pods, even if they are located on a different node. In this lesson, we’ll talk about pod communication from within a node, including how to inspect the virtual interfaces, and then get into what happens when a pod wants to talk to another pod on a different node.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img24.png)
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img25.png)
+
+See which node our pod is on:
+```
+kubectl get pods -o wide
+```
+
+Log in to the node:
+```
+ssh [node_name]
+```
+
+View the node's virtual network interfaces:
+```
+ifconfig
+```
+
+View the containers in the pod:
+```
+docker ps
+```
+
+Get the process ID for the container:
+```
+docker inspect --format '{{ .State.Pid }}' [container_id]
+```
+
+Use nsenter to run a command in the process's network namespace:
+```
+nsenter -t [container_pid] -n ip addr
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img26.png)
+
