@@ -20,7 +20,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Upgrading the Kubernetes Cluster Using kubeadm](#upgrading-the-kubernetes-cluster-using-kubeadm)
 - [Cluster Communications](#cluster-communications)
   - [Pod and Node Networking](#pod-and-node-networking)
-  - [Container Network Interface CNI](#container-network-interface-cni)
+  - [Container Network Interface (CNI)](#container-network-interface-cni)
   - [Service Networking](#service-networking)
   - [Ingress Rules and Load Balancers](#ingress-rules-and-load-balancers)
   - [Cluster DNS](#cluster-dns)
@@ -989,3 +989,4 @@ nsenter -t [container_pid] -n ip addr
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img26.png)
 
+### Container Network Interface (CNI)
