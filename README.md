@@ -17,7 +17,14 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Upgrading the Kubernetes Cluster](#upgrading-the-kubernetes-cluster)
     - [Operating System Upgrades within a Kubernetes Cluster](#operating-system-upgrades-within-a-kubernetes-cluster)
     - [Backing Up and Restoring a Kubernetes Cluster](#backing-up-and-restoring-a-kubernetes-cluster)
-    - [Upgrading the Kubernetes Cluster Using kubeadm](#upgrading-the-Kubernetes-cluster-using-kubeadm)
+    - [Upgrading the Kubernetes Cluster Using kubeadm](#upgrading-the-kubernetes-cluster-using-kubeadm)
+- [Cluster Communications](#cluster-communications)
+  - [Pod and Node Networking](#pod-and-node-networking)
+  - [Container Network Interface CNI](#container-network-interface-cni)
+  - [Service Networking](#service-networking)
+  - [Ingress Rules and Load Balancers](#ingress-rules-and-load-balancers)
+  - [Cluster DNS](#cluster-dns)
+  - [Creating a Service and Discovering DNS Names in Kubernetes](#creating-a-service-and-discovering-dns-names-in-kubernetes)
 
 
 ## Understanding Kubernetes Architecture
@@ -858,3 +865,86 @@ scp etcd.tar.gz cloud_user@18.219.235.42:~/
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img23.png)
+
+### Upgrading the Kubernetes Cluster Using kubeadm
+**Install Version 1.13.5 of kubeadm**
+
+On the master node, check the current version of kubeadm.
+```
+kubectl get nodes
+```
+
+Create two new variables:
+```
+export VERSION=v1.13.5
+export ARCH=amd64
+```
+
+Get the latest version of kubeadm.
+```
+curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubeadm > kubeadm
+```
+
+Install the latest version of kubeadm.
+```
+sudo install -o root -g root -m 0755 ./kubeadm /usr/bin/kubeadm
+```
+
+Verify that the installation was successful.
+```
+sudo kubeadm version
+```
+
+Plan the upgrade to check for errors.
+```
+sudo kubeadm upgrade plan
+```
+
+Apply the upgrade of the kube-scheduler and kube-controller-manager.
+```
+sudo kubeadm upgrade apply v1.13.5
+```
+
+**Install the Latest Version of kubelet on the Master Node**
+
+Get the latest version of kubelet.
+```
+curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubelet > kubelet
+```
+
+Install the latest version of kubelet.
+```
+sudo install -o root -g root -m 0755 ./kubelet /usr/bin/kubelet
+```
+
+Restart the kubelet service.
+```
+sudo systemctl restart kubelet.service
+```
+Verify that the installation was successful.
+```
+kubectl get nodes
+```
+
+**Install the Latest Version of kubectl**
+
+Create two new variables:
+```
+export VERSION=v1.13.5
+export ARCH=amd64
+```
+
+Get the latest version of kubectl.
+```
+curl -sSL https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubectl > kubectl
+```
+
+Install the latest version of kubectl.
+```
+sudo install -o root -g root -m 0755 ./kubectl /usr/bin/kubectl
+```
+
+Verify that the installation was successful.
+```
+kubectl version
+```
