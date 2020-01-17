@@ -25,6 +25,13 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Ingress Rules and Load Balancers](#ingress-rules-and-load-balancers)
     - [Cluster DNS](#cluster-dns)
     - [Creating a Service and Discovering DNS Names in Kubernetes](#creating-a-service-and-discovering-dns-names-in-kubernetes)
+- [Pod Scheduling within the Kubernetes Cluster](#pod-scheduling-within-the-kubernetes-cluster)
+    - [Configuring the Kubernetes Scheduler](#configuring-the-kubernetes-scheduler)
+    - [Running Multiple Schedulers for Multiple Pods](#running-multiple-schedulers-for-multiple-pods)
+    - [Scheduling Pods with Resource Limits and Label Selectors](#scheduling-pods-with-resource-limits-and-label-selectors)
+    - [DaemonSets and Manually Scheduled Pods](#daemonsets-and-manually-scheduled-pods)
+    - [Displaying Scheduler Events](#displaying-scheduler-events)
+    - [Scheduling Pods with Taints and Tolerations in Kubernetes](#scheduling-pods-with-taints-and-tolerations-in-kubernetes)
 
 
 ## Understanding Kubernetes Architecture
@@ -579,8 +586,7 @@ kubectl describe pods
 
 **Get the Docker gpg, and add it to your repository.**
 
-Run the following commands on all three nodes to get the Docker gpg key and add it to your repository:
-
+- Run the following commands on all three nodes to get the Docker gpg key and add it to your repository:
 ```
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
@@ -588,7 +594,7 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 ```
 
 **Get the Kubernetes gpg key, and add it to your repository.**
-Run the following commands on all three nodes to get the Kubernetes gpg key and add it to your repository:
+- Run the following commands on all three nodes to get the Kubernetes gpg key and add it to your repository:
 ```
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 
@@ -600,8 +606,7 @@ sudo apt-get update
 ```
 
 **Install Docker, kubelet, kubeadm, and kubectl.**
-Run the following command on all three nodes to install docker, kubelet, kubeadm, and kubectl:
-
+- Run the following command on all three nodes to install docker, kubelet, kubeadm, and kubectl:
 ```
 sudo apt-get install -y docker-ce=18.06.1~ce~3-0~ubuntu kubelet=1.13.5-00 kubeadm=1.13.5-00 kubectl=1.13.5-00
 
@@ -610,13 +615,13 @@ sudo apt-mark hold kubelet kubeadm kubectl docker-ce #mark installed application
 ```
 
 **Initialize the Kubernetes cluster.**
-In the master node, run the following command to initialize the cluster using kubeadm:
+- In the master node, run the following command to initialize the cluster using kubeadm:
 ```
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
 
 **Set up local kubeconfig.**
-In the master node, run the following commands to set up local kubeconfig:
+- In the master node, run the following commands to set up local kubeconfig:
 ```
 mkdir -p $HOME/.kube
 
@@ -626,21 +631,21 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 **Apply the flannel CNI plugin as a network overlay.**
-In the master node, run the following command to apply flannel:
+- In the master node, run the following command to apply flannel:
 
 ```
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 ```
 
 **Join the worker nodes to the cluster, and verify they have joined successfully.**
-In both of the worker nodes, run the output of the kubeadm init command to join the worker nodes to the cluster. Should look similar to:
+- In both of the worker nodes, run the output of the kubeadm init command to join the worker nodes to the cluster. Should look similar to:
 
 ```
 sudo kubeadm join 'KUBERNETES_MASTER_IP':6443 --token 'UNIQUE_TOKEN' --discovery-token-ca-cert-hash sha256:'UNIQUE_HASH'
 ```
 
 **Run a deployment that includes at least one pod, and verify it was successful.**
-In the master node, run the following commands to run a deployment of ngnix and verify:
+- In the master node, run the following commands to run a deployment of ngnix and verify:
 ```
 kubectl create deployment nginx --image=nginx
 
@@ -655,12 +660,12 @@ kubectl describe pods nginx-5c7588df-wgrg6
 ```
 
 **Use port forwarding to extend port 80 to 8081, and verify access to the pod directly.**
-In the master node, run the following command to forward the container port 80 to 8081:
+- In the master node, run the following command to forward the container port 80 to 8081:
 ```
 kubectl port-forward [pod_name] 8081:80
 ```
 
-Open a new shell to the Kubernetes master and run the following command:
+- Open a new shell to the Kubernetes master and run the following command:
 ```
 curl --head http://127.0.0.1:8081
 ```
@@ -668,20 +673,20 @@ curl --head http://127.0.0.1:8081
 *NOTE: You must leave the previous session open in order to properly port forward. As soon as you close that session, the port will NO LONGER be open.*
 
 **Execute a command directly on a pod.**
-In the original master node terminal, run this command to execute the **nginx version** command from a pod:
+- In the original master node terminal, run this command to execute the **nginx version** command from a pod:
 ```
 kubectl exec -it <pod_name> -- nginx -v
 ```
 
 **Create a service, and verify connectivity on the node port.**
-In the original master node terminal, run the following commands to create a NodePort service and view the service:
+- In the original master node terminal, run the following commands to create a NodePort service and view the service:
 ```
 kubectl expose deployment nginx --port 80 --type NodePort
 
 kubectl get services
 ```
 
-In one of the worker node terminals, run the following command to verify its connectivity (get the **$node_port** number from the **PORT(S)** column of the above service output):
+- In one of the worker node terminals, run the following command to verify its connectivity (get the **$node_port** number from the **PORT(S)** column of the above service output):
 
 ```
 curl -I localhost:$node_port
@@ -1274,30 +1279,30 @@ spec:
 
 ### Creating a Service and Discovering DNS Names in Kubernetes
 **Create an nginx deployment using the latest nginx image.**
-Use this command to create an nginx deployment:
+- Use this command to create an nginx deployment:
 ```
 kubectl run nginx --image=nginx
 ```
 
 **Verify the deployment has been created successfully.**
-Use this command to verify deployment was successful:
+- Use this command to verify deployment was successful:
 ```
 kubectl get deployments
 ```
 
 **Create a service from the nginx deployment created in the previous objective.**
-Use this command to create a service:
+- Use this command to create a service:
 ```
 kubectl expose deployment nginx --port 80 --type NodePort
 ```
 
-Use this command to verify the service was created:
+- Use this command to verify the service was created:
 ```
 kubectl get services
 ```
 
 **Create a pod that will allow you to perform the DNS query.**
-Use the following YAML to create the busybox pod spec:
+- Use the following YAML to create the busybox pod spec:
 ```
 apiVersion: v1
 kind: Pod
@@ -1313,24 +1318,95 @@ spec:
   restartPolicy: Always
 ```
 
-Use the following command to create the busybox pod:
+- Use the following command to create the busybox pod:
 ```
 kubectl create -f busybox.yaml
 ```
 
-Use the following command to verify the pod was created successfully:
+- Use the following command to verify the pod was created successfully:
 ```
 kubectl get pods
 ```
 
 **Perform the DNS query to the service created in an earlier objective.**
-Use the following command to query the DNS name of the nginx service:
+- Use the following command to query the DNS name of the nginx service:
 ```
 kubectl exec busybox -- nslookup nginx
 ```
 
 **Record the DNS name of the service.**
-Record the name of:
+- Record the name of:
 ```
 <service-name>.default.svc.cluster.local
 ```
+
+## Pod Scheduling within the Kubernetes Cluster
+### Configuring the Kubernetes Scheduler
+The default scheduler in Kubernetes attempts to find the best node for your pod by going through a series of steps. In this lesson, we will cover the steps in detail in order to better understand the scheduler’s function when placing pods on nodes to maximize uptime for the applications running in your cluster. We will also go through how to create a deployment with node affinity.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img32.png)
+
+Label your node as being located in availability zone 1:
+```
+kubectl label node chadcrowell1c.mylabserver.com availability-zone=zone1
+```
+
+Label your node as dedicated infrastructure:
+```
+kubectl label node chadcrowell2c.mylabserver.com share-type=dedicated
+```
+
+Here is the YAML for the deployment to include the node affinity rules:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pref
+spec:
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: pref
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 80
+            preference:
+              matchExpressions:
+              - key: availability-zone
+                operator: In
+                values:
+                - zone1
+          - weight: 20
+            preference:
+              matchExpressions:
+              - key: share-type
+                operator: In
+                values:
+                - dedicated
+      containers:
+      - args:
+        - sleep
+        - "99999"
+        image: busybox
+        name: main
+```
+
+Create the deployment:
+```
+kubectl create -f pref-deployment.yaml
+```
+
+View the deployment:
+```
+kubectl get deployments
+```
+
+View which pods landed on which nodes:
+```
+kubectl get pods -o wide
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img33.png)
