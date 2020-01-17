@@ -1410,3 +1410,233 @@ kubectl get pods -o wide
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img33.png)
+
+### Running Multiple Schedulers for Multiple Pods
+In Kubernetes, you can run multiple schedulers simultaneously. You can then use different schedulers to schedule different pods. You may, for example, want to set different rules for the scheduler to run all of your pods on one node. In this lesson, I will show you how to deploy a new scheduler alongside your default scheduler and then schedule three different pods using the two schedulers.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img34.png)
+
+**ClusterRole.yaml**
+```
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: csinodes-admin
+rules:
+- apiGroups: ["storage.k8s.io"]
+  resources: ["csinodes"]
+  verbs: ["get", "watch", "list"]
+```
+
+**ClusterRoleBinding.yaml**
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: read-csinodes-global
+subjects:
+- kind: ServiceAccount
+  name: my-scheduler
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: csinodes-admin
+  apiGroup: rbac.authorization.k8s.io
+```
+
+**Role.yaml**
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: system:serviceaccount:kube-system:my-scheduler
+  namespace: kube-system
+rules:
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - csinodes
+  verbs:
+  - get
+  - list
+  - watch
+```
+
+**RoleBinding.yaml**
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-csinodes
+  namespace: kube-system
+subjects:
+- kind: User
+  name: kubernetes-admin
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role 
+  name: system:serviceaccount:kube-system:my-scheduler
+  apiGroup: rbac.authorization.k8s.io
+```
+
+Edit the existing kube-scheduler cluster role with **kubectl edit clusterrole system:kube-scheduler** and add the following:
+```
+- apiGroups:
+  - ""
+  resourceNames:
+  - kube-scheduler
+  - my-scheduler
+  resources:
+  - endpoints
+  verbs:
+  - delete
+  - get
+  - patch
+  - update
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - watch
+  - list
+  - get
+```
+
+**My-scheduler.yaml**
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-scheduler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: my-scheduler-as-kube-scheduler
+subjects:
+- kind: ServiceAccount
+  name: my-scheduler
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: system:kube-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: scheduler
+    tier: control-plane
+  name: my-scheduler
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      component: scheduler
+      tier: control-plane
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: scheduler
+        tier: control-plane
+        version: second
+    spec:
+      serviceAccountName: my-scheduler
+      containers:
+      - command:
+        - /usr/local/bin/kube-scheduler
+        - --address=0.0.0.0
+        - --leader-elect=false
+        - --scheduler-name=my-scheduler
+        image: chadmcrowell/custom-scheduler
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10251
+          initialDelaySeconds: 15
+        name: kube-second-scheduler
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10251
+        resources:
+          requests:
+            cpu: '0.1'
+        securityContext:
+          privileged: false
+        volumeMounts: []
+      hostNetwork: false
+      hostPID: false
+      volumes: []
+```
+
+Run the deployment for **my-scheduler**:
+```
+kubectl create -f my-scheduler.yaml
+```
+
+View your new scheduler in the **kube-system** namespace:
+```
+kubectl get pods -n kube-system
+```
+
+**pod1.yaml**
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-annotation
+  labels:
+    name: multischeduler-example
+spec:
+  containers:
+  - name: pod-with-no-annotation-container
+    image: k8s.gcr.io/pause:2.0
+```
+
+**pod2.yaml**
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: annotation-default-scheduler
+  labels:
+    name: multischeduler-example
+spec:
+  schedulerName: default-scheduler
+  containers:
+  - name: pod-with-default-annotation-container
+    image: k8s.gcr.io/pause:2.0
+```
+
+**pod3.yaml**
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: annotation-second-scheduler
+  labels:
+    name: multischeduler-example
+spec:
+  schedulerName: my-scheduler
+  containers:
+  - name: pod-with-second-annotation-container
+    image: k8s.gcr.io/pause:2.0
+```
+
+Create pods:
+```
+kubectl create -f pod1.yaml #pod2.yaml pod3.yaml
+```
+
+View the pods as they are created:
+```
+kubectl get pods -o wide
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img35.png)
+
