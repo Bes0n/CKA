@@ -1271,3 +1271,66 @@ spec:
         value: "2"
       - name: edns0
 ```
+
+### Creating a Service and Discovering DNS Names in Kubernetes
+**Create an nginx deployment using the latest nginx image.**
+Use this command to create an nginx deployment:
+```
+kubectl run nginx --image=nginx
+```
+
+**Verify the deployment has been created successfully.**
+Use this command to verify deployment was successful:
+```
+kubectl get deployments
+```
+
+**Create a service from the nginx deployment created in the previous objective.**
+Use this command to create a service:
+```
+kubectl expose deployment nginx --port 80 --type NodePort
+```
+
+Use this command to verify the service was created:
+```
+kubectl get services
+```
+
+**Create a pod that will allow you to perform the DNS query.**
+Use the following YAML to create the busybox pod spec:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+spec:
+  containers:
+  - image: busybox:1.28.4
+    command:
+      - sleep
+      - "3600"
+    name: busybox
+  restartPolicy: Always
+```
+
+Use the following command to create the busybox pod:
+```
+kubectl create -f busybox.yaml
+```
+
+Use the following command to verify the pod was created successfully:
+```
+kubectl get pods
+```
+
+**Perform the DNS query to the service created in an earlier objective.**
+Use the following command to query the DNS name of the nginx service:
+```
+kubectl exec busybox -- nslookup nginx
+```
+
+**Record the DNS name of the service.**
+Record the name of:
+```
+<service-name>.default.svc.cluster.local
+```
