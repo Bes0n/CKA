@@ -1640,3 +1640,119 @@ kubectl get pods -o wide
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img35.png)
 
+### Scheduling Pods with Resource Limits and Label Selectors
+In order to share the resources of your node properly, you can set resource limits and requests in Kubernetes. This allows you to reserve enough CPU and memory for your application while still maintaining system health. In this lesson, we will create some requests and limits in our pod YAML to show how it’s used by the node.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img36.png)
+
+View the capacity and the allocatable info from a node:
+```
+kubectl describe nodes
+```
+
+The pod YAML for a pod with requests:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-pod1
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: "chadcrowell3c.mylabserver.com"
+  containers:
+  - image: busybox
+    command: ["dd", "if=/dev/zero", "of=/dev/null"]
+    name: pod1
+    resources:
+      requests:
+        cpu: 800m
+        memory: 20Mi
+```
+
+Create the requests pod:
+```
+kubectl create -f resource-pod1.yaml
+```
+
+View the pods and nodes they landed on:
+```
+kubectl get pods -o wide
+```
+
+The YAML for a pod that has a large request:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-pod2
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: "chadcrowell3c.mylabserver.com"
+  containers:
+  - image: busybox
+    command: ["dd", "if=/dev/zero", "of=/dev/null"]
+    name: pod2
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 20Mi
+```
+
+Create the pod with 1000 millicore request:
+```
+kubectl create -f resource-pod2.yaml
+```
+
+See why the pod with a large request didn’t get scheduled:
+```
+kubectl describe resource-pod2
+```
+
+Look at the total requests per node:
+```
+kubectl describe nodes chadcrowell3c.mylabserver.com
+```
+
+Delete the first pod to make room for the pod with a large request:
+```
+kubectl delete pods resource-pod1
+```
+
+Watch as the first pod is terminated and the second pod is started:
+```
+kubectl get pods -o wide -w
+```
+
+The YAML for a pod that has limits:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: limited-pod
+spec:
+  containers:
+  - image: busybox
+    command: ["dd", "if=/dev/zero", "of=/dev/null"]
+    name: main
+    resources:
+      limits:
+        cpu: 1
+        memory: 20Mi
+```
+
+Create a pod with limits:
+```
+kubectl create -f limited-pod.yaml
+```
+
+Use the exec utility to use the top command:
+```
+kubectl exec -it limited-pod top
+```
+
+Notes:
+  - Request resources - can consume all available resources on a node.
+  - Limits resources - pods will not consume that set limits. But if you set more than node can provide kubernetes will kill that pod
+  - Using top command from pod will show you resources of pod, but node's resources.  
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img37.png)
