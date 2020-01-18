@@ -1832,3 +1832,50 @@ kubectl get nodes chadcrowell3c.mylabserver.com --show-labels
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img39.png)
+
+### Displaying Scheduler Events
+There are multiple ways to view the events related to the scheduler. In this lesson, we’ll look at ways in which you can troubleshoot any problems with your scheduler or just find out more information.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img40.png)
+
+View the name of the scheduler pod:
+```
+kubectl get pods -n kube-system
+```
+
+Get the information about your scheduler pod events:
+```
+kubectl describe pods [scheduler_pod_name] -n kube-system
+```
+
+View the events in your default namespace:
+```
+kubectl get events
+```
+
+View the events in your kube-system namespace:
+```
+kubectl get events -n kube-system
+```
+
+Delete all the pods in your default namespace:
+```
+kubectl delete pods --all
+```
+
+Watch events as they are appearing in real time:
+```
+kubectl get events -w
+```
+
+View the logs from the scheduler pod:
+```
+kubectl logs [kube_scheduler_pod_name] -n kube-system
+```
+
+The location of a systemd service scheduler pod:
+```
+/var/log/kube-scheduler.log
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img41.png)
