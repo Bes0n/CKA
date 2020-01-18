@@ -40,8 +40,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - You can have one or many **master** nodes
     - You can have zero or mane **worker** nodes
 
-<div style="text-align:center"><img src="https://github.com/Bes0n/CKA/blob/master/images/img1.png" /></div>
-<!-- ![img]() -->
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img1.png)
 
 - Here what these components are used for:
 
