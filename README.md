@@ -1757,3 +1757,78 @@ Notes:
   - Using top command from pod will show you resources of pod, but node's resources.  
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img37.png)
+
+
+### DaemonSets and Manually Scheduled Pods
+DaemonSets do not use a scheduler to deploy pods. In fact, there are currently DaemonSets in the Kubernetes cluster that we made. In this lesson, I will show you where to find those and how to create your own DaemonSet pods to deploy without the need for a scheduler.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img38.png)
+
+Find the DaemonSet pods that exist in your kubeadm cluster:
+```
+kubectl get pods -n kube-system -o wide
+```
+
+Delete a DaemonSet pod and see what happens:
+```
+kubectl delete pods [pod_name] -n kube-system
+```
+
+Give the node a label to signify it has SSD:
+```
+kubectl label node [node_name] disk=ssd
+```
+
+The YAML for a DaemonSet:
+```
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  name: ssd-monitor
+spec:
+  selector:
+    matchLabels:
+      app: ssd-monitor
+  template:
+    metadata:
+      labels:
+        app: ssd-monitor
+    spec:
+      nodeSelector:
+        disk: ssd
+      containers:
+      - name: main
+        image: linuxacademycontent/ssd-monitor
+```
+
+Create a DaemonSet from a YAML spec:
+```
+kubectl create -f ssd-monitor.yaml
+```
+
+Label another node to specify it has SSD:
+```
+kubectl label node chadcrowell2c.mylabserver.com disk=ssd
+```
+
+View the DaemonSet pods that have been deployed:
+```
+kubectl get pods -o wide
+```
+
+Remove the label from a node and watch the DaemonSet pod terminate:
+```
+kubectl label node chadcrowell3c.mylabserver.com disk-
+```
+
+Change the label on a node to change it to spinning disk:
+```
+kubectl label node chadcrowell2c.mylabserver.com disk=hdd --overwrite
+```
+
+Pick the label to choose for your DaemonSet:
+```
+kubectl get nodes chadcrowell3c.mylabserver.com --show-labels
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img39.png)
