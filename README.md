@@ -1963,8 +1963,121 @@ kubectl get pods <pod_name> -o yaml
 
 ## Deploying Applications in the Kubernetes Cluster
 ### Deploying an Application, Rolling Updates, and Rollbacks
+We already know Kubernetes will run pods and deployments, but what happens when you need to update or change the version of your application running inside of the Kubernetes cluster? That’s where rolling updates come in, allowing you to update the app image with zero downtime. In this lesson, we’ll go over a rolling update, how to roll back, and how to pause the update if things aren’t going well.
 
+![img](https://github.com/Bes0n/CKA/blob/master/images/img42.png)
 
+The YAML for a deployment:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeserve
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: kubeserve
+  template:
+    metadata:
+      name: kubeserve
+      labels:
+        app: kubeserve
+    spec:
+      containers:
+      - image: linuxacademycontent/kubeserve:v1
+        name: app
+```
+
+Create a deployment with a record (for rollbacks):
+```
+kubectl create -f kubeserve-deployment.yaml --record
+```
+
+Check the status of the rollout:
+```
+kubectl rollout status deployments kubeserve
+```
+
+View the ReplicaSets in your cluster:
+```
+kubectl get replicasets
+```
+
+Scale up your deployment by adding more replicas:
+```
+kubectl scale deployment kubeserve --replicas=5
+```
+
+Expose the deployment and provide it a service:
+```
+kubectl expose deployment kubeserve --port 80 --target-port 80 --type NodePort
+```
+
+Set the minReadySeconds attribute to your deployment:
+```
+kubectl patch deployment kubeserve -p '{"spec": {"minReadySeconds": 10}}'
+```
+
+Use kubectl apply to update a deployment:
+```
+kubectl apply -f kubeserve-deployment.yaml
+```
+
+Use kubectl replace to replace an existing deployment:
+```
+kubectl replace -f kubeserve-deployment.yaml
+```
+
+Run this curl look while the update happens:
+```
+while true; do curl http://10.105.31.119; done
+```
+
+Perform the rolling update:
+```
+kubectl set image deployments/kubeserve app=linuxacademycontent/kubeserve:v2 --v 6
+```
+
+Describe a certain ReplicaSet:
+```
+kubectl describe replicasets kubeserve-[hash]
+```
+
+Apply the rolling update to version 3 (buggy):
+```
+kubectl set image deployment kubeserve app=linuxacademycontent/kubeserve:v3
+```
+
+Undo the rollout and roll back to the previous version:
+```
+kubectl rollout undo deployments kubeserve
+```
+
+Look at the rollout history:
+```
+kubectl rollout history deployment kubeserve
+```
+
+Roll back to a certain revision:
+```
+kubectl rollout undo deployment kubeserve --to-revision=2
+```
+
+Pause the rollout in the middle of a rolling update (canary release):
+```
+kubectl rollout pause deployment kubeserve
+```
+
+Resume the rollout after the rolling update looks good:
+```
+kubectl rollout resume deployment kubeserve
+```
+
+Notes:
+  - difference between ```kubectl replace``` and ```kubectl apply``` is
+    - in **apply** if deployment doesn't exist it will be created and applied
+    - in **replace** deployment must exist, otherwise deployment will fail
 
 ### Configuring an Application for High Availability and Scale
 ### Creating a Self-Healing Application
