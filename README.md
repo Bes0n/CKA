@@ -2079,6 +2079,8 @@ Notes:
     - in **apply** if deployment doesn't exist it will be created and applied
     - in **replace** deployment must exist, otherwise deployment will fail
 
+![img](https://github.com/Bes0n/CKA/blob/master/images/img43.png)
+
 ### Configuring an Application for High Availability and Scale
 ### Creating a Self-Healing Application
 ### Performing a Rolling Update of an Application in Kubernetes
