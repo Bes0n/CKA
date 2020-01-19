@@ -32,6 +32,11 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [DaemonSets and Manually Scheduled Pods](#daemonsets-and-manually-scheduled-pods)
     - [Displaying Scheduler Events](#displaying-scheduler-events)
     - [Scheduling Pods with Taints and Tolerations in Kubernetes](#scheduling-pods-with-taints-and-tolerations-in-kubernetes)
+- [Deploying Applications in the Kubernetes Cluster](#deploying-applications-in-the-kubernetes-cluster)
+    - [Deploying an Application, Rolling Updates, and Rollbacks](#deploying-an-application-rolling-updates-and-rollbacks)
+    - [Configuring an Application for High Availability and Scale](#configuring-an-application-for-high-availability-and-scale)
+    - [Creating a Self-Healing Application](#creating-a-self-healing-application)
+    - [Performing a Rolling Update of an Application in Kubernetes](#performing-a-rolling-update-of-an-application-in-kubernetes)
 
 
 ## Understanding Kubernetes Architecture
