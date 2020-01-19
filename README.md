@@ -1960,3 +1960,12 @@ kubectl get pods -o wide
 ```
 kubectl get pods <pod_name> -o yaml
 ```
+
+## Deploying Applications in the Kubernetes Cluster
+### Deploying an Application, Rolling Updates, and Rollbacks
+
+
+
+### Configuring an Application for High Availability and Scale
+### Creating a Self-Healing Application
+### Performing a Rolling Update of an Application in Kubernetes
