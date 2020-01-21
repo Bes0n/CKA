@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeserve
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubeserve
+  template:
+    metadata:
+      name: kubeserve
+      labels:
+        app: kubeserve
+    spec:
+      containers:
+      - env:
+        - name: app
+          value: "1"
+        image: linuxacademycontent/kubeserve:v1
+        name: app
+        volumeMounts:
+        - mountPath: /data
+          name: volume-data
+      volumes:
+      - name: volume-data
+        persistentVolumeClaim:
+          claimName: kubeserve-pvc
