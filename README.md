@@ -2629,7 +2629,7 @@ View our Persistent Volumes:
 kubectl get persistentvolumes
 ```
 
-
+![img](https://github.com/Bes0n/CKA/blob/master/images/img49.png)
 
 ### Volume Access Modes
 ### Persistent Volume Claims
