@@ -3014,3 +3014,130 @@ kubectl exec -it [pod-name] -- ls /data
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img56.png)
 
 ### Creating Persistent Storage for Pods in Kubernetes
+**Create a PersistentVolume.**
+1. Use the following YAML spec for the PersistentVolume named redis-pv.yaml:
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+```
+
+2. Then, create the PersistentVolume:
+```
+kubectl apply -f redis-pv.yaml
+```
+
+**Create a PersistentVolumeClaim.**
+1. Use the following YAML spec for the PersistentVolumeClaim named redis-pvc.yaml:
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redisdb-pvc
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+2. Then, create the PersistentVolumeClaim:
+```
+kubectl apply -f redis-pvc.yaml
+```
+
+**Create the redispod image, with a mounted volume to mount path** `/data`
+1. Use the following YAML spec for the pod named redispod.yaml:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redispod
+spec:
+  containers:
+  - image: redis
+    name: redisdb
+    volumeMounts:
+    - name: redis-data
+      mountPath: /data
+    ports:
+    - containerPort: 6379
+      protocol: TCP
+  volumes:
+  - name: redis-data
+    persistentVolumeClaim:
+      claimName: redisdb-pvc
+```
+
+2. Then, create the pod:
+```
+kubectl apply -f redispod.yaml
+```
+
+3. Verify the pod was created:
+```
+kubectl get pods
+```
+
+**Connect to the container and write some data.**
+1. Connect to the container and run the redis-cli:
+```
+kubectl exec -it redispod redis-cli
+```
+
+2. Set the key space server:name and value "redis server":
+```
+SET server:name "redis server"
+```
+
+3. Run the GET command to verify the value was set:
+```
+GET server:name
+```
+4. Exit the redis-cli:
+```
+QUIT
+```
+
+**Delete** `redispod` **and create a new pod named** `redispod2`.
+1. Delete the existing redispod:
+```
+kubectl delete pod redispod
+```
+
+2. Open the file redispod.yaml and change line 4 from name: redispod to:
+```
+name: redispod2
+```
+
+3. Create a new pod named redispod2:
+```
+kubectl apply -f redispod.yaml
+```
+
+**Verify the volume has persistent data.**
+1. Connect to the container and run redis-cli:
+```
+kubectl exec -it redispod2 redis-cli
+```
+
+2. Run the GET command to retrieve the data written previously:
+```
+GET server:name
+```
+
+3. Exit the redis-cli:
+```
+QUIT
+```
