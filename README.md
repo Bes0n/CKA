@@ -3253,3 +3253,95 @@ kubectl get nodes
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img58.png)
+
+### Cluster Authentication and Authorization
+Once the API server has determined who you are (whether a pod or a user), the authorization is handled by RBAC. In this lesson, we will talk about roles, cluster roles, role bindings, and cluster role bindings.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img59.png)
+
+Create a new namespace:
+```
+kubectl create ns web
+```
+
+The YAML for a service role:
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: web
+  name: service-reader
+rules:
+- apiGroups: [""]
+  verbs: ["get", "list"]
+  resources: ["services"]
+```
+
+Create a new role from that YAML file:
+```
+kubectl apply -f role.yaml
+```
+
+Create a RoleBinding:
+```
+kubectl create rolebinding test --role=service-reader --serviceaccount=web:default -n web
+```
+
+Run a proxy for inter-cluster communications:
+```
+kubectl proxy
+```
+
+Try to access the services in the web namespace:
+```
+curl localhost:8001/api/v1/namespaces/web/services
+```
+
+Create a ClusterRole to access PersistentVolumes:
+```
+kubectl create clusterrole pv-reader --verb=get,list --resource=persistentvolumes
+```
+
+Create a ClusterRoleBinding for the cluster role:
+```
+kubectl create clusterrolebinding pv-test --clusterrole=pv-reader --serviceaccount=web:default
+```
+
+The YAML for a pod that includes a curl and proxy container:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: curlpod
+  namespace: web
+spec:
+  containers:
+  - image: tutum/curl
+    command: ["sleep", "9999999"]
+    name: main
+  - image: linuxacademycontent/kubectl-proxy
+    name: proxy
+  restartPolicy: Always
+```
+
+Create the pod that will allow you to curl directly from the container:
+```
+kubectl apply -f curl-pod.yaml
+```
+
+Get the pods in the web namespace:
+```
+kubectl get pods -n web
+```
+
+Open a shell to the container:
+```
+kubectl exec -it curlpod -n web -- sh
+```
+
+Access PersistentVolumes (cluster-level) from the pod:
+```
+curl localhost:8001/api/v1/persistentvolumes
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img60.png)
