@@ -44,6 +44,16 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Storage Objects](#storage-objects)
     - [Applications with Persistent Storage](#applications-with-persistent-storage)
     - [Creating Persistent Storage for Pods in Kubernetes](#creating-persistent-storage-for-pods-in-kubernetes)
+- [Securing the Kubernetes Cluster](#securing-the-kubernetes-cluster)
+    - [Kubernetes Security Primitives](#kubernetes-security-primitives)
+    - [Cluster Authentication and Authorization](#cluster-authentication-and-authorization)
+    - [](#)
+    - [](#)
+    - [](#)
+    - [](#)
+    - [](#)
+    - [](#)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -3141,3 +3151,6 @@ GET server:name
 ```
 QUIT
 ```
+
+## Securing the Kubernetes Cluster
+### Kubernetes Security Primitives
