@@ -47,10 +47,10 @@ Preparation for Cloud Native Certified Kubernetes Administrator
 - [Securing the Kubernetes Cluster](#securing-the-kubernetes-cluster)
     - [Kubernetes Security Primitives](#kubernetes-security-primitives)
     - [Cluster Authentication and Authorization](#cluster-authentication-and-authorization)
-    - [Configuring Network Policies](#configuring network policies)
+    - [Configuring Network Policies](#configuring-network-policies)
     - [Creating TLS Certificates](#creating-tls-certificates)
     - [Secure Images](#secure-images)
-
+    - [Defining Security Contexts](#defining-security-contexts)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
