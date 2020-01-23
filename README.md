@@ -47,16 +47,9 @@ Preparation for Cloud Native Certified Kubernetes Administrator
 - [Securing the Kubernetes Cluster](#securing-the-kubernetes-cluster)
     - [Kubernetes Security Primitives](#kubernetes-security-primitives)
     - [Cluster Authentication and Authorization](#cluster-authentication-and-authorization)
-<<<<<<< HEAD
-    - [](#)
-    - [](#)
-    - [](#)
-    - [](#)
-    - [](#)
-    - [](#)
-=======
-
->>>>>>> 19d444ac23788dc6285b5184ec9ecf9284e555f3
+    - [Configuring Network Policies](#configuring network policies)
+    - [Creating TLS Certificates](#creating-tls-certificates)
+    - [Secure Images](#secure-images)
 
 
 ## Understanding Kubernetes Architecture
@@ -3355,3 +3348,306 @@ curl localhost:8001/api/v1/persistentvolumes
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img60.png)
 
+### Configuring Network Policies
+Network policies allow you to specify which pods can talk to other pods. This helps when securing communication between pods, allowing you to identify ingress and egress rules. You can apply a network policy to a pod by using pod or namespace selectors. You can even choose a CIDR block range to apply the network policy. In this lesson, we’ll go through each of these options for network policies.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img61.png)
+
+Download the canal plugin:
+```
+wget -O canal.yaml https://docs.projectcalico.org/v3.5/getting-started/kubernetes/installation/hosted/canal/canal.yaml
+```
+
+Apply the canal plugin:
+```
+kubectl apply -f canal.yaml
+```
+
+The YAML for a deny-all NetworkPolicy:
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+```
+
+Run a deployment to test the NetworkPolicy:
+```
+kubectl run nginx --image=nginx --replicas=2
+```
+
+Create a service for the deployment:
+```
+kubectl expose deployment nginx --port=80
+```
+
+Attempt to access the service by using a busybox interactive pod:
+```
+kubectl run busybox --rm -it --image=busybox /bin/sh
+#wget --spider --timeout=1 nginx
+```
+
+The YAML for a pod selector NetworkPolicy:
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-netpolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: web
+    ports:
+    - port: 5432
+```
+
+Label a pod to get the NetworkPolicy:
+```
+kubectl label pods [pod_name] app=db
+```
+
+The YAML for a namespace NetworkPolicy:
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ns-netpolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          tenant: web
+    ports:
+    - port: 5432
+```
+
+The YAML for an IP block NetworkPolicy:
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ipblock-netpolicy
+spec:
+  podSelector:
+    matchLabels:
+      app: db
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 192.168.1.0/24
+```
+
+The YAML for an egress NetworkPolicy:
+```
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: web
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: db
+    ports:
+    - port: 5432
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img62.png)
+
+### Creating TLS Certificates
+A Certificate Authority (CA) is used to generate TLS certificates and authenticate to your API server. In this lesson, we’ll go through certificate requests and generating a new certificate.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img63.png)
+
+Find the CA certificate on a pod in your cluster:
+```
+kubectl exec busybox -- ls /var/run/secrets/kubernetes.io/serviceaccount
+```
+
+Download the binaries for the cfssl tool:
+```
+wget -q --show-progress --https-only --timestamping \
+  https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 \
+  https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+```
+
+Make the binary files executable:
+```
+chmod +x cfssl_linux-amd64 cfssljson_linux-amd64
+```
+
+Move the files into your bin directory:
+```
+sudo mv cfssl_linux-amd64 /usr/local/bin/cfssl
+sudo mv cfssljson_linux-amd64 /usr/local/bin/cfssljson
+```
+
+Check to see if you have cfssl installed correctly:
+```
+cfssl version
+```
+
+Create a CSR file:
+```
+cat <<EOF | cfssl genkey - | cfssljson -bare server
+{
+  "hosts": [
+    "my-svc.my-namespace.svc.cluster.local",
+    "my-pod.my-namespace.pod.cluster.local",
+    "172.168.0.24",
+    "10.0.34.2"
+  ],
+  "CN": "my-pod.my-namespace.pod.cluster.local",
+  "key": {
+    "algo": "ecdsa",
+    "size": 256
+  }
+}
+EOF
+```
+
+Create a CertificateSigningRequest API object:
+```
+cat <<EOF | kubectl create -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: pod-csr.web
+spec:
+  groups:
+  - system:authenticated
+  request: $(cat server.csr | base64 | tr -d '\n')
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
+```
+
+View the CSRs in the cluster:
+```
+kubectl get csr
+```
+
+View additional details about the CSR:
+```
+kubectl describe csr pod-csr.web
+```
+
+Approve the CSR:
+```
+kubectl certificate approve pod-csr.web
+```
+
+View the certificate within your CSR:
+```
+kubectl get csr pod-csr.web -o yaml
+```
+
+Extract and decode your certificate to use in a file:
+```
+kubectl get csr pod-csr.web -o jsonpath='{.status.certificate}' \
+    | base64 --decode > server.crt
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img64.png)
+
+### Secure Images
+Working with secure images is imperative in Kubernetes, as it ensures your applications are running efficiently and protecting you from vulnerabilities. In this lesson, we’ll go through how to set Kubernetes to use a private registry.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img65.png)
+
+View where your Docker credentials are stored:
+```
+sudo vim /home/cloud_user/.docker/config.json
+```
+
+Log in to the Docker Hub:
+```
+sudo docker login
+```
+
+View the images currently on your server:
+```
+sudo docker images
+```
+
+Pull a new image to use with a Kubernetes pod:
+```
+sudo docker pull busybox:1.28.4
+```
+
+Log in to a private registry using the docker login command:
+```
+sudo docker login -u podofminerva -p 'otj701c9OucKZOCx5qrRblofcNRf3W+e' podofminerva.azurecr.io
+```
+
+View your stored credentials:
+```
+sudo vim /home/cloud_user/.docker/config.json
+```
+
+Tag an image in order to push it to a private registry:
+```
+sudo docker tag busybox:1.28.4 podofminerva.azurecr.io/busybox:latest
+```
+
+Push the image to your private registry:
+```
+docker push podofminerva.azurecr.io/busybox:latest
+```
+
+Create a new docker-registry secret:
+```
+kubectl create secret docker-registry acr --docker-server=https://podofminerva.azurecr.io --docker-username=podofminerva --docker-password='otj701c9OucKZOCx5qrRblofcNRf3W+e' --docker-email=user@example.com
+```
+
+Modify the default service account to use your new docker-registry secret:
+```
+kubectl patch sa default -p '{"imagePullSecrets": [{"name": "acr"}]}'
+```
+
+The YAML for a pod using an image from a private repository:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: acr-pod
+  labels:
+    app: busybox
+spec:
+  containers:
+    - name: busybox
+      image: podofminerva.azurecr.io/busybox:latest
+      command: ['sh', '-c', 'echo Hello Kubernetes! && sleep 3600']
+      imagePullPolicy: Always
+```
+
+Create the pod from the private image:
+```
+kubectl apply -f acr-pod.yaml
+```
+
+View the running pod:
+```
+kubectl get pods
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img66.png)
