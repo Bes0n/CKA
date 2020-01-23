@@ -51,6 +51,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Creating TLS Certificates](#creating-tls-certificates)
     - [Secure Images](#secure-images)
     - [Defining Security Contexts](#defining-security-contexts)
+    - [Securing Persistent Key Value Store](#securing-persistent-key-value-store)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -3898,3 +3899,151 @@ kubectl exec -it group-context -c first sh
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img68.png)
+
+### Securing Persistent Key Value Store
+Secrets are used to secure sensitive data you may access from your pod. The data never gets written to disk because it's stored in an in-memory filesystem (tmpfs). Because secrets can be created independently of pods, there is less risk of the secret being exposed during the pod lifecycle.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img69.png)
+
+View the secrets in your cluster:
+```
+kubectl get secrets
+```
+
+View the default secret mounted to each pod:
+```
+kubectl describe pods pod-with-defaults
+```
+
+View the token, certificate, and namespace within the secret:
+```
+kubectl describe secret
+```
+
+Generate a key for your https server:
+```
+openssl genrsa -out https.key 2048
+```
+
+Generate a certificate for the https server:
+```
+openssl req -new -x509 -key https.key -out https.cert -days 3650 -subj /CN=www.example.com
+```
+
+Create an empty file to create the secret:
+```
+touch file
+```
+
+Create a secret from your key, cert, and file:
+```
+kubectl create secret generic example-https --from-file=https.key --from-file=https.cert --from-file=file
+```
+
+View the YAML from your new secret:
+```
+kubectl get secrets example-https -o yaml
+```
+
+Create the configMap that will mount to your pod:
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  my-nginx-config.conf: |
+    server {
+        listen              80;
+        listen              443 ssl;
+        server_name         www.example.com;
+        ssl_certificate     certs/https.cert;
+        ssl_certificate_key certs/https.key;
+        ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers         HIGH:!aNULL:!MD5;
+
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        }
+
+    }
+  sleep-interval: |
+    25
+```
+
+The YAML for a pod using the new secret:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: example-https
+spec:
+  containers:
+  - image: linuxacademycontent/fortune
+    name: html-web
+    env:
+    - name: INTERVAL
+      valueFrom:
+        configMapKeyRef:
+          name: config
+          key: sleep-interval
+    volumeMounts:
+    - name: html
+      mountPath: /var/htdocs
+  - image: nginx:alpine
+    name: web-server
+    volumeMounts:
+    - name: html
+      mountPath: /usr/share/nginx/html
+      readOnly: true
+    - name: config
+      mountPath: /etc/nginx/conf.d
+      readOnly: true
+    - name: certs
+      mountPath: /etc/nginx/certs/
+      readOnly: true
+    ports:
+    - containerPort: 80
+    - containerPort: 443
+  volumes:
+  - name: html
+    emptyDir: {}
+  - name: config
+    configMap:
+      name: config
+      items:
+      - key: my-nginx-config.conf
+        path: https.conf
+  - name: certs
+    secret:
+      secretName: example-https
+```
+
+Apply the config map and the example-https yaml files:
+```
+kubectl apply -f configmap.yaml
+kubectl apply -f example-https.yaml
+```
+
+Describe the nginx conf via ConfigMap:
+```
+kubectl describe configmap
+```
+
+View the cert mounted on the container:
+```
+kubectl exec example-https -c web-server -- mount | grep certs
+```
+
+Use port forwarding on the pod to server traffic from 443:
+```
+kubectl port-forward example-https 8443:443 &
+```
+
+Curl the web server to get a response:
+```
+curl https://localhost:8443 -k
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img70.png)
