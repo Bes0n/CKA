@@ -52,6 +52,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Secure Images](#secure-images)
     - [Defining Security Contexts](#defining-security-contexts)
     - [Securing Persistent Key Value Store](#securing-persistent-key-value-store)
+    - [Creating a ClusterRole to Access a PV in Kubernetes](#creating-a-clusterrole-to-access-a-pv-in-kubernetes)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4047,3 +4049,57 @@ curl https://localhost:8443 -k
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img70.png)
+
+### Creating a ClusterRole to Access a PV in Kubernetes
+**View the Persistent Volume.**
+- Use the following command to view the Persistent Volume within the cluster:
+```
+kubectl get pv
+```
+
+**Create a ClusterRole.**
+- Use the following command to create the ClusterRole:
+```
+kubectl create clusterrole pv-reader --verb=get,list --resource=persistentvolumes 
+```
+
+**Create a ClusterRoleBinding.**
+- Use the following command to create the ClusterRoleBinding:
+```
+kubectl create clusterrolebinding pv-test --clusterrole=pv-reader --serviceaccount=web:default
+```
+
+**Create a pod to access the PV.**
+1. Use the following YAML to create a pod that will proxy the connection and allow you to curl the address:
+```
+ apiVersion: v1
+ kind: Pod
+ metadata:
+   name: curlpod
+   namespace: web
+ spec:
+   containers:
+   - image: tutum/curl
+     command: ["sleep", "9999999"]
+     name: main
+   - image: linuxacademycontent/kubectl-proxy
+     name: proxy
+   restartPolicy: Always
+```
+
+2. Use the following command to create the pod:
+```
+ kubectl apply -f curlpod.yaml
+```
+
+**Request access to the PV from the pod.**
+1. Use the following command (from within the pod) to access a shell from the pod:
+```
+ kubectl exec -it curlpod -n web -- sh
+```
+
+2. Use the following command to curl the PV resource:
+```
+ curl localhost:8001/api/v1/persistentvolumes
+```
+
