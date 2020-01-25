@@ -56,6 +56,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
 - [Monitoring Cluster Components](#monitoring-cluster-components)
     - [Monitoring the Cluster Components](#monitoring-the-cluster-components)
     - [Monitoring the Applications Running within a Cluster](#monitoring-the-applications-running-within-a-cluster)
+    - [Managing Cluster Component Logs](#managing-cluster-component-logs)
+    - [Managing Application Logs](#managing-application-logs)
 
 
 ## Understanding Kubernetes Architecture
@@ -4260,3 +4262,169 @@ kubectl get ep
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img74.png)
+
+### Managing Cluster Component Logs
+There are many ways to manage the logs that can accumulate from both applications and system components. In this lesson, we’ll go through a few different approaches to organizing your logs.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img75.png)
+
+The directory where the container logs reside:
+```
+/var/log/containers
+```
+
+The directory where kubelet stores its logs:
+```
+/var/log
+```
+
+The YAML for a pod that has two different log streams:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter
+spec:
+  containers:
+  - name: count
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - >
+      i=0;
+      while true;
+      do
+        echo "$i: $(date)" >> /var/log/1.log;
+        echo "$(date) INFO $i" >> /var/log/2.log;
+        i=$((i+1));
+        sleep 1;
+      done
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  volumes:
+  - name: varlog
+    emptyDir: {}
+```
+
+Create a pod that has two different log streams to the same directory:
+```
+kubectl apply -f twolog.yaml
+```
+
+View the logs in the /var/log directory of the container:
+```
+kubectl exec counter -- ls /var/log
+```
+
+The YAML for a sidecar container that will tail the logs for each type:
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter
+spec:
+  containers:
+  - name: count
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - >
+      i=0;
+      while true;
+      do
+        echo "$i: $(date)" >> /var/log/1.log;
+        echo "$(date) INFO $i" >> /var/log/2.log;
+        i=$((i+1));
+        sleep 1;
+      done
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  - name: count-log-1
+    image: busybox
+    args: [/bin/sh, -c, 'tail -n+1 -f /var/log/1.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  - name: count-log-2
+    image: busybox
+    args: [/bin/sh, -c, 'tail -n+1 -f /var/log/2.log']
+    volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+  volumes:
+  - name: varlog
+    emptyDir: {}
+```
+
+View the first type of logs separately:
+```
+kubectl logs counter count-log-1
+```
+
+View the second type of logs separately:
+```
+kubectl logs counter count-log-2
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img76.png)
+
+### Managing Application Logs
+Containerized applications usually write their logs to standard out and standard error instead of writing their logs to files. Docker then redirects those streams to files. You can retrieve those files with the kubectl logs command in Kubernetes. In this lesson, we’ll go over the many ways to manipulate the output of your logs and redirect them to a file.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img77.png)
+
+Get the logs from a pod:
+```
+kubectl logs nginx
+```
+
+Get the logs from a specific container on a pod:
+```
+kubectl logs counter -c count-log-1
+```
+
+Get the logs from all containers on the pod:
+```
+kubectl logs counter --all-containers=true
+```
+
+Get the logs from containers with a certain label:
+```
+kubectl logs -lapp=nginx
+```
+
+Get the logs from a previously terminated container within a pod:
+```
+kubectl logs -p -c nginx nginx
+```
+
+Stream the logs from a container in a pod:
+```
+kubectl logs -f -c count-log-1 counter
+```
+
+Tail the logs to only view a certain number of lines:
+```
+kubectl logs --tail=20 nginx
+```
+
+View the logs from a previous time duration:
+```
+kubectl logs --since=1h nginx
+```
+
+View the logs from a container within a pod within a deployment:
+```
+kubectl logs deployment/nginx -c nginx
+```
+
+Redirect the output of the logs to a file:
+```
+kubectl logs counter -c count-log-1 > count.log
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img78.png)
