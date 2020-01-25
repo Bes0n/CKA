@@ -59,6 +59,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Managing Cluster Component Logs](#managing-cluster-component-logs)
     - [Managing Application Logs](#managing-application-logs)
     - [Monitor and Output Logs to a File in Kubernetes](#monitor-and-output-logs-to-a-file-in-kubernetes)
+- [Identifying Failure within the Kubernetes Cluster](#identifying-failure-within-the-kubernetes-luster)
+    - [Troubleshooting Application Failure](#troubleshooting-application-failure)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4448,3 +4450,6 @@ kubectl logs <pod_name> -n <namespace_name>
 ```
 kubectl logs <pod_name> -n <namespace_name> > broken-pod.log
 ```
+
+## Identifying Failure within the Kubernetes Cluster
+### Troubleshooting Application Failure
