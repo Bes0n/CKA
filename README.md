@@ -64,7 +64,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Troubleshooting Control Plane Failure](#troubleshooting-control-plane-failure)
     - [Troubleshooting Worker Node Failure](#troubleshooting-worker-node-failure)
     - [Troubleshooting Networking](#troubleshooting-networking)
-
+    - [Repairing Failed Pods in Kubernetes](#repairing-failed-pods-in-kubernetes)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4710,3 +4710,50 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img86.png)
+
+### Repairing Failed Pods in Kubernetes
+**Identify the broken pods.**
+- Use the following command to see what’s in the cluster:
+```
+kubectl get all --all-namespaces
+```
+
+**Find out why the pods are broken.**
+- Use the following command to inspect the pod and view the events:
+```
+kubectl describe pod <pod_name>
+```
+
+**Repair the broken pods.**
+1. Use the following command to repair the broken pods in the most efficient manner:
+```
+ kubectl edit deploy nginx -n web
+```
+
+2. Where it says image: **nginx:191**, change it to **image: nginx**. Save and exit.
+
+3. Verify the repair is complete:
+```
+ kubectl get po -n web
+```
+
+4. See the new replica set:
+```
+ kubectl get rs -n web
+```
+
+**Ensure pod health by accessing the pod directly.**
+1. List the pods including the IP addresses:
+```
+ kubectl get po -n web -o wide
+```
+
+2. Start a busybox pod:
+```
+ kubectl run busybox --image=busybox --rm -it --restart=Never -- sh
+```
+
+3. Use the following command to access the pod directly via its container port, replacing POD_IP_ADDRESS with an appropriate pod IP:
+```
+ wget -qO- POD_IP_ADDRESS:80
+```
