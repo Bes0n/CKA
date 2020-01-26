@@ -63,6 +63,8 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Troubleshooting Application Failure](#troubleshooting-application-failure)
     - [Troubleshooting Control Plane Failure](#troubleshooting-control-plane-failure)
     - [Troubleshooting Worker Node Failure](#troubleshooting-worker-node-failure)
+    - [Troubleshooting Networking](#troubleshooting-networking)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4618,3 +4620,93 @@ sudo more syslog | tail -120 | grep kubelet
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img84.png)
+
+### Troubleshooting Networking
+Network issues usually start to arise internally or when using a service. In this lesson, we’ll go through the many methods to see if your app is serving traffic by creating a service and testing the communication within the cluster.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img85.png)
+
+Run a deployment using the container port 9376 and with three replicas:
+```
+kubectl run hostnames --image=k8s.gcr.io/serve_hostname \
+                        --labels=app=hostnames \
+                        --port=9376 \
+                        --replicas=3
+```
+
+List the services in your cluster:
+```
+kubectl get svc
+```
+
+Create a service by exposing a port on the deployment:
+```
+kubectl expose deployment hostnames --port=80 --target-port=9376
+```
+
+Run an interactive busybox pod:
+```
+kubectl run -it --rm --restart=Never busybox --image=busybox:1.28 sh
+```
+
+From the pod, check if DNS is resolving hostnames:
+```
+# nslookup hostnames
+```
+
+From the pod, cat out the /etc/resolv.conf file:
+```
+# cat /etc/resolv.conf
+```
+
+From the pod, look up the DNS name of the Kubernetes service:
+```
+# nslookup kubernetes.default
+```
+
+Get the JSON output of your service:
+```
+kubectl get svc hostnames -o json
+```
+
+View the endpoints for your service:
+```
+kubectl get ep
+```
+
+Communicate with the pod directly (without the service):
+```
+wget -qO- 10.244.1.6:9376
+```
+
+Check if kube-proxy is running on the nodes:
+```
+ps auxw | grep kube-proxy
+```
+
+Check if kube-proxy is writing iptables:
+```
+iptables-save | grep hostnames
+```
+
+View the list of kube-system pods:
+```
+kubectl get pods -n kube-system
+```
+
+Connect to your kube-proxy pod in the kube-system namespace:
+```
+kubectl exec -it kube-proxy-cqptg -n kube-system -- sh
+```
+
+Delete the flannel CNI plugin:
+```
+kubectl delete -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+```
+
+Apply the Weave Net CNI plugin:
+```
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img86.png)
