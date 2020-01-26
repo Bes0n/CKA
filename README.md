@@ -62,7 +62,7 @@ Preparation for Cloud Native Certified Kubernetes Administrator
 - [Identifying Failure within the Kubernetes Cluster](#identifying-failure-within-the-kubernetes-luster)
     - [Troubleshooting Application Failure](#troubleshooting-application-failure)
     - [Troubleshooting Control Plane Failure](#troubleshooting-control-plane-failure)
-
+    - [Troubleshooting Worker Node Failure](#troubleshooting-worker-node-failure)
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4566,3 +4566,55 @@ sudo systemctl disable firewalld && systemctl stop firewalld
 ```
 
 ![img](https://github.com/Bes0n/CKA/blob/master/images/img82.png)
+
+### Troubleshooting Worker Node Failure
+Troubleshooting worker node failure is a lot like troubleshooting a non-responsive server, in addition to the kubectl tools we have at our disposal. In this lesson, we’ll learn how to recover a node and add it back to the cluster and find out how to identify when the kublet service is down.
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img83.png)
+
+Listing the status of the nodes should be the first step:
+```
+kubectl get nodes
+```
+
+Find out more information about the nodes with kubectl describe:
+```
+kubectl describe nodes chadcrowell2c.mylabserver.com
+```
+
+You can try to log in to your server via SSH:
+```
+ssh chadcrowell2c.mylabserver.com
+```
+
+Get the IP address of your nodes:
+```
+kubectl get nodes -o wide
+```
+
+Use the IP address to further probe the server:
+```
+ssh cloud_user@172.31.29.182
+```
+
+Generate a new token after spinning up a new server:
+```
+sudo kubeadm token generate
+```
+
+Create the kubeadm join command for your new worker node:
+```
+sudo kubeadm token create [token_name] --ttl 2h --print-join-command
+```
+
+View the journalctl logs:
+```
+sudo journalctl -u kubelet
+```
+
+View the syslogs:
+```
+sudo more syslog | tail -120 | grep kubelet
+```
+
+![img](https://github.com/Bes0n/CKA/blob/master/images/img84.png)
