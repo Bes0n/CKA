@@ -65,6 +65,11 @@ Preparation for Cloud Native Certified Kubernetes Administrator
     - [Troubleshooting Worker Node Failure](#troubleshooting-worker-node-failure)
     - [Troubleshooting Networking](#troubleshooting-networking)
     - [Repairing Failed Pods in Kubernetes](#repairing-failed-pods-in-kubernetes)
+- [Hands-On Practice Exam](#hands-on-practice-exam)
+    - [CKA Practice Exam: Part 1](#cka-practice-exam-part-1)
+    - [CKA Practice Exam: Part 2](#cka-practice-exam-part-2)
+    - [CKA Practice Exam: Part 3](#cka-practice-exam-part-3)
+
 
 ## Understanding Kubernetes Architecture
 ### Kubernetes Cluster Architecture
@@ -4756,4 +4761,94 @@ kubectl describe pod <pod_name>
 3. Use the following command to access the pod directly via its container port, replacing POD_IP_ADDRESS with an appropriate pod IP:
 ```
  wget -qO- POD_IP_ADDRESS:80
+```
+
+## Hands-On Practice Exam
+### CKA Practice Exam: Part 1
+##### Additional Information and Resources
+You have been given access to a three-node cluster. Within that cluster, you will be responsible for creating a service for end users of your web application. You will ensure the application meets the specifications set by the developers and the proper resources are in place to ensure maximum uptime for the app. You must perform the following tasks in order to complete this hands-on lab:
+
+- All objects should be in the web namespace.
+- The deployment name should be webapp.
+- The deployment should have 3 replicas.
+- The deployment’s pods should have one container using the linuxacademycontent/podofminerva image with the tag latest.
+- The service should be named web-service.
+- The service should forward traffic to port 80 on the pods.
+- The service should be exposed externally by listening on port 30080 on each node.
+- The pods should be configured to check the /healthz. endpoint on port 8081, and automatically restart the container if the check fails.
+- The pods should be configured to not receive traffic until the endpoint on port 80 responds successfully.
+
+**Create a deployment named `webapp` in the `web` namespace and verify connectivity.**
+1. Use the following command to create a namespace named `web`:
+```
+ kubectl create ns web
+```
+
+2. Use the following command to create a deployment named webapp:
+```
+kubectl run webapp --image=linuxacademycontent/podofminerva:latest --port=80 --replicas=3 -n web
+```
+**Create a service named `web-service` and forward traffic from the pods.**
+1. Use the following command to get the IP address of a pod that’s a part of the deployment:
+```
+kubectl get po -o wide -n web
+```
+
+2. Use the following command to create a temporary pod with a shell to its container:
+```
+ kubectl run busybox --image=busybox --rm -it --restart=Never -- sh
+```
+
+3. Use the following command (from the container’s shell) to send a request to the web pod:
+```
+ wget -O- <pod_ip_address>:80
+```
+
+4. Use the following command to create the YAML for the service named `web-service`:
+```
+ kubectl expose deployment/webapp --port=80 --target-port=80 --type=NodePort -n web --dry-run -o yaml > web-service.yaml
+```
+
+5. Use Vim to add the namespace and the NodePort to the YAML:
+```
+vim web-service.yaml
+```
+  
+Change the name to `web-service`, add the namespace `web`, and add nodePort: 30080.
+
+6. Use the following command to create the service:
+```
+ kubectl apply -f web-service.yaml
+```
+
+7. Use the following command to verify that the service is responding on the correct port:
+```
+ curl localhost:30080
+```
+
+8. Use the following command to modify the deployment:
+```
+ kubectl edit deploy webapp -n web
+```
+
+9. Add the liveness probe and the readiness probe::
+```
+ livenessProbe:
+   httpGet:
+     path: /healthz
+     port: 8081
+ readinessProbe:
+   httpGet:
+     path: /
+     port: 80
+```
+
+10. Use the following command to check if the pods are running:
+```
+kubectl get po -n web
+```
+
+11. Use the following command to check if the probes were added to the pods:
+```
+ kubectl get po <pod_name> -o yaml -n web --export
 ```
