@@ -4768,14 +4768,14 @@ kubectl describe pod <pod_name>
 ##### Additional Information and Resources
 You have been given access to a three-node cluster. Within that cluster, you will be responsible for creating a service for end users of your web application. You will ensure the application meets the specifications set by the developers and the proper resources are in place to ensure maximum uptime for the app. You must perform the following tasks in order to complete this hands-on lab:
 
-- All objects should be in the web namespace.
-- The deployment name should be webapp.
+- All objects should be in the `web` namespace.
+- The deployment name should be `webapp`.
 - The deployment should have 3 replicas.
-- The deployment’s pods should have one container using the linuxacademycontent/podofminerva image with the tag latest.
-- The service should be named web-service.
+- The deployment’s pods should have one container using the `linuxacademycontent/podofminerva` image with the tag `latest`.
+- The service should be named `web-service`.
 - The service should forward traffic to port 80 on the pods.
 - The service should be exposed externally by listening on port 30080 on each node.
-- The pods should be configured to check the /healthz. endpoint on port 8081, and automatically restart the container if the check fails.
+- The pods should be configured to check the `/healthz`. endpoint on port 8081, and automatically restart the container if the check fails.
 - The pods should be configured to not receive traffic until the endpoint on port 80 responds successfully.
 
 **Create a deployment named `webapp` in the `web` namespace and verify connectivity.**
